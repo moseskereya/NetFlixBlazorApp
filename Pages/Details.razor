@@ -1,0 +1,71 @@
+﻿@page "/details/{movieid}"
+@inject IHttpClientFactory _client
+
+@if (string.IsNullOrWhiteSpace(errorString) == false)
+{
+    <p>@errorString</p>
+}
+else if (movies == null)
+{
+    <div class="text-center">
+        <img src="/Images/spinner.gif" alt="Spinner" />
+    </div>
+}
+else
+{
+<div>
+    <div class="row">
+        <div class="col-md-6">
+            <img src="https://image.tmdb.org/t/p/original/@movies.poster_path" class="img-fluid" alt="movie_img" />
+        </div>
+        <div class="col-md-4 text-black-50">
+            <h3 class="m-4">@movies.title</h3>
+            <p>Released on @movies.release_date</p>
+            <p>@movies.overview</p>
+            <div class="movie_ratings">
+                <div>
+                    <h4>Rating</h4>
+                    <span class="oi oi-star"></span>
+                    <span>@movies.vote_average</span>
+                </div>
+                <div>
+                    <h4>Popularity</h4>
+                    <span class="oi oi-people"></span>
+                    <span>@movies.popularity Views</span><br />
+                </div>
+            </div>
+            <div>
+                <a href="/" class="btn btn-danger mt-4">Go Back</a>
+                <a href="@movies.homepage" class="btn btn-danger mt-4">Read More</a>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+@code {
+    [Parameter]
+    public string movieid { get; set; }
+
+    MovieDetail movies { get; set; } = new MovieDetail();
+    Moses Moses { get; set; } = new Moses();
+    string errorString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.themoviedb.org/3/movie/{movieid}?api_key=fa1875db1f08a7d5f9887db721a0a94e&append_to_response=videos,images,credits");
+        var client = _client.CreateClient();
+        HttpResponseMessage response = await client.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            movies = await response.Content.ReadFromJsonAsync<MovieDetail>();
+            errorString = null;
+        }
+        else
+        {
+            errorString = $"There was an error {response.ReasonPhrase}";
+        }
+    }
+
+}

@@ -1,0 +1,66 @@
+﻿@page "/rated"
+@inject IHttpClientFactory _client
+<h3>Now Playing Movies</h3>
+@if (string.IsNullOrWhiteSpace(errorString) == false)
+{
+    <p>@errorString</p>
+}
+else if (movie == null)
+{
+    <div class="text-center">
+        <img src="/Images/spinner.gif" alt="Spinner" />
+    </div>
+}
+else
+{
+<div class="card-columns">
+    @foreach (var item in movie.results)
+    {
+        <div class="card">
+            <a href="@($"/details/{item.id}")">
+                <img class="card-img-top" src="https://image.tmdb.org/t/p/original/@item.poster_path" alt="Card image">
+            </a>
+            <div class="card-body">
+                <h4 class="card-title">@item.original_title</h4>
+                <p class="card-text">Some example text some example text. John Doe is an architect and engineer</p>
+            </div>
+            <div class="card-footer">
+                <div class="foote_content">
+                    <div>
+                        <span>@item.release_date</span>
+                    </div>
+                    <div>
+                        <span class="oi oi-star"></span>
+                        <span>@item.vote_average</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+}
+
+@code {
+    Movie movie;
+    string errorString;
+
+    [Parameter]
+    public string movieid { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://api.themoviedb.org/3/movie/top_rated?api_key=fa1875db1f08a7d5f9887db721a0a94e&language=en-US");
+        var client = _client.CreateClient();
+        HttpResponseMessage response = await client.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            movie = await response.Content.ReadFromJsonAsync<Movie>();
+            errorString = null;
+        }
+        else
+        {
+            errorString = $"There was an error {response.ReasonPhrase}";
+        }
+    }
+}
